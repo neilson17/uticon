@@ -17,7 +17,12 @@ cursor.execute(sql)
 result = list(cursor.fetchall())
 # checkpoint 1 -> 2553
 # checkpoint 2 -> 9560
-for i in range(2553, len(result)):
+# checkpoint 3 -> 14939
+# checkpoint 4 -> 18280
+# checkpoint 5 -> 20592
+# checkpoint 6 -> 20776
+# checkpoint 7 -> 28032
+for i in range(28032, len(result)):
     print(i)
     if (result[i][9] == None):
       url = bing_image_urls(result[i][2], limit=1) 

@@ -15,7 +15,7 @@ mydb = mysql.connector.connect(
 mycursor = mydb.cursor()
 
 # Define Keyword
-keyword = "protein bar chocolate"
+keyword = "diaper"
 
 # =========================================================================================================
 # Preprocessing Function
@@ -31,7 +31,7 @@ keyword = "protein bar chocolate"
 nlp = spacy.load('en_core_web_sm')
 def preprocessing(data):
     result = []
-    arr_pos = ["ADJ", "NOUN", "PROPN", "VERB", "ADV"]
+    arr_pos = ["ADJ", "NOUN", "PROPN", "VERB", "ADV", "X"]
     
     # Lowercasing and Tokenization
     doc = nlp(data.lower().replace("|", " "))
@@ -45,7 +45,7 @@ def preprocessing(data):
 
 def preprocessingPluralKeyword(data):
     result = []
-    arr_pos = ["ADJ", "NOUN", "PROPN", "VERB", "ADV"]
+    arr_pos = ["ADJ", "NOUN", "PROPN", "VERB", "ADV", "X"]
     
     # Lowercasing and Tokenization
     doc = nlp(data.lower().replace("|", " "))
@@ -55,7 +55,7 @@ def preprocessingPluralKeyword(data):
             # Lemmatization
             le = x.lemma_
             result.append(le)
-            if (x.pos_ == "NOUN"):
+            if (x.pos_ == "NOUN" or x.pos_ == "X"):
                 if re.search('[sxz]$', le):
                     result.append(re.sub('$', 'es', le))
                 elif re.search('[^aeioudgkprt]h$', le):
@@ -122,7 +122,7 @@ for i in range(len(resultRaw)):
 data_similarity.sort(key=lambda sim: sim[1], reverse= True)
 
 # =============================== Note ===============================
-# [[[id, nama, desc], 0,4], [[id, nama, desc], 0.3]]
+# [[(id, url, nama, desc, dkk), 0,4], [(id, url, nama, desc, dkk), 0.3]]
 # def onBackPressed(x):
 #     logiccc(x)
 #     return hasil
@@ -140,7 +140,7 @@ data_similarity.sort(key=lambda sim: sim[1], reverse= True)
 # Print Result
 # =========================================================================================================
 # Delete targeted txt file
-target = "searchresult5.txt"
+target = "searchresult.txt"
 f = open(target, "r+")
 f.truncate(0)
 f.close()
@@ -159,25 +159,26 @@ for x in data_similarity:
 # =========================================================================================================
 # Insert Search and Result to database
 # =========================================================================================================
-lemmatizedKeyword = " ".join(preprocessedKeyword)
-sql = "SELECT * FROM search where keyword=%s"
-mycursor.execute(sql, (lemmatizedKeyword,))
-keywordResult = list(mycursor.fetchall())
+if (len(data_similarity) > 0):
+    lemmatizedKeyword = " ".join(preprocessedKeyword)
+    sql = "SELECT * FROM search where keyword=%s"
+    mycursor.execute(sql, (lemmatizedKeyword,))
+    keywordResult = list(mycursor.fetchall())
 
-if (len(keywordResult) > 0):
-    searchHistory = keywordResult[0]
-    sql2 = "UPDATE search SET count=%s, time=NOW() where id=%s"
-    mycursor.execute(sql2, (str(int(searchHistory[2]) + 1), searchHistory[0]))
-    mydb.commit()
-else:
-    sql2 = "INSERT INTO search (`keyword`, `count`, `time`) VALUES (%s, 1, NOW())"
-    mycursor.execute(sql2, (lemmatizedKeyword,))
-    mydb.commit()
-    searchId = mycursor.lastrowid
-    
-    for i in range(len(data_similarity)):
-        sql3 = "INSERT INTO search_result (`search_id`, `product_id`, `priority`) VALUES (%s, %s, %s)"
-        mycursor.execute(sql3, (searchId, data_similarity[i][0][0], str(i + 1)))
+    if (len(keywordResult) > 0):
+        searchHistory = keywordResult[0]
+        sql2 = "UPDATE search SET count=%s, time=NOW() where id=%s"
+        mycursor.execute(sql2, (str(int(searchHistory[2]) + 1), searchHistory[0]))
         mydb.commit()
-        if(i == 14):
-            break
+    else:
+        sql2 = "INSERT INTO search (`keyword`, `count`, `time`) VALUES (%s, 1, NOW())"
+        mycursor.execute(sql2, (lemmatizedKeyword,))
+        mydb.commit()
+        searchId = mycursor.lastrowid
+        
+        for i in range(len(data_similarity)):
+            sql3 = "INSERT INTO search_result (`search_id`, `product_id`, `priority`) VALUES (%s, %s, %s)"
+            mycursor.execute(sql3, (searchId, data_similarity[i][0][0], str(i + 1)))
+            mydb.commit()
+            if(i == 14):
+                break
