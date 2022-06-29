@@ -1,5 +1,5 @@
 #region Import
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request
 import mysql.connector
 import mysql.connector
 import re
@@ -22,11 +22,11 @@ mycursor = mydb.cursor()
 
 #region Search Product Function
 # Step:
-# lowercasing
-# tokenize
-# remove special character
-# stopword
-# lemmatization atau stemming
+# 1. Lowercasing
+# 2. Tokenize
+# 3. Remove special character
+# 4. Stopword
+# 5. Lemmatization
 
 nlp = spacy.load('en_core_web_sm')
 def preprocessing(data):
@@ -70,7 +70,6 @@ def preprocessingPluralKeyword(data):
 def calculateSimilarity(keyword, mode):
     resultRaw = []
     pluralPreprocessedKeyword = preprocessingPluralKeyword(keyword) 
-    print(pluralPreprocessedKeyword)
     preprocessedKeyword = preprocessing(keyword)
     keywordlist = []
     for w in pluralPreprocessedKeyword:
@@ -85,6 +84,11 @@ def calculateSimilarity(keyword, mode):
 
         data_similarity = []
         for i in range(len(resultRaw)):
+            # Example
+            # Book 1                               Book 2
+            # Title: Harry Potter                  Title: A Great Book
+            # Description: A Great Book            Description: Harry Potter
+            
             # Title Similarity
             tfidf = TfidfVectorizer(tokenizer=lambda x: x, lowercase=False)
             vectorTitle = tfidf.fit_transform([preprocessing(resultRaw[i][2]), preprocessedKeyword])
@@ -114,7 +118,7 @@ def calculateSimilarity(keyword, mode):
 
 def insertSearchResult(data_similarity, preprocessedKeyword):
     lemmatizedKeyword = " ".join(preprocessedKeyword)
-    sql = "SELECT * FROM search where keyword=%s"
+    sql = "SELECT * FROM search where keyword=%s" 
     mycursor.execute(sql, (lemmatizedKeyword,))
     keywordResult = list(mycursor.fetchall())
 
@@ -186,10 +190,9 @@ def index():
         recomAmount = round(((x[1] / totalCount) + (x[2] / totalInvert)) / 2 * 15)
         sql5 = "SELECT p.* FROM search_result sr inner join product p on sr.product_id = p.id where sr.search_id=%s order by sr.priority limit %s"
         mycursor.execute(sql5, (x[0], recomAmount))
-        recommendation.extend(list(mycursor.fetchall()))
-        # for x in list(mycursor.fetchall()):
-        #     if (x not in recommendation):
-        #         recommendation.append(x)
+        for x in list(mycursor.fetchall()):
+            if (x not in recommendation):
+                recommendation.append(x)
     
     if (len(recommendation) < 15):
         randomCount = 15 - len(recommendation)
@@ -241,7 +244,6 @@ def detail(id):
     mycursor.execute(sql, (id,))
     result = list(mycursor.fetchall())
     data_similarity = calculateSimilarity(result[0][2], 0)
-    print(data_similarity)
     return render_template('product-detail.html', result=result, similar = data_similarity[:15])
 #endregion
 

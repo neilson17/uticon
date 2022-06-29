@@ -67,7 +67,7 @@ def preprocessingPluralKeyword(data):
 
     return result
 
-# 10 product yang ditampilkan
+# 15 product yang ditampilkan
 # Range rekomendasi 1 days <= a <= 4 days (>= 5 days dibuang dari rekomendasi)
 
 # Keyword    Count   Timestamp   Invert (5 - x)
@@ -78,10 +78,10 @@ def preprocessingPluralKeyword(data):
 # ----------------------------------------------
 # total      12                  10    
 
-# (2/12 + 3/10) * 10 / 2 = 2     
-# (4/12 + 4/10) * 10 / 2 = 4
-# (1/12 + 1/10) * 10 / 2 = 1
-# (5/12 + 2/10) * 10 / 2 = 3
+# (2/12 + 3/10) * 15 / 2 = 3     
+# (4/12 + 4/10) * 15 / 2 = 5
+# (1/12 + 1/10) * 15 / 2 = 1
+# (5/12 + 2/10) * 15 / 2 = 5
 
 # =========================================================================================================
 # Search Keyword in Database
